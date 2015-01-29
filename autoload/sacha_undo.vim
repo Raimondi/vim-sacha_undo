@@ -1,5 +1,5 @@
-function! s:asciiedges(seen, rev, parents)
-  " Adds edge info to changelog DAG walk suitable for s:ascii()
+function! Asciiedges(seen, rev, parents)
+  " Adds edge info to changelog DAG walk suitable for Ascii()
   if index(a:seen, a:rev) == -1
     call add(a:seen, a:rev)
   endif
@@ -28,7 +28,7 @@ function! s:asciiedges(seen, rev, parents)
   let nmorecols = len(a:seen) - ncols
   return [nodeidx, edges, ncols, nmorecols]
 endfunction
-function! s:get_nodeline_edges_tail(
+function! Get_nodeline_edges_tail(
       \ node_index, p_node_index, n_columns, n_columns_diff, p_diff, fix_tail
       \)
   if a:fix_tail && a:n_columns_diff == a:p_diff && a:n_columns_diff != 0
@@ -45,7 +45,7 @@ function! s:get_nodeline_edges_tail(
     return repeat(['|', ' '], a:n_columns - a:node_index - 1)
   endif
 endfunction
-function! s:draw_edges(edges, nodeline, interline)
+function! Draw_edges(edges, nodeline, interline)
   for [start, end] in a:edges
     if start == end + 1
       let a:interline[2 * end + 1] = '/'
@@ -66,7 +66,7 @@ function! s:draw_edges(edges, nodeline, interline)
     endif
   endfor
 endfunction
-function! s:fix_long_right_edges(edges)
+function! Fix_long_right_edges(edges)
   let i = 0
   let len = len(a:edges)
   while i < len
@@ -76,7 +76,7 @@ function! s:fix_long_right_edges(edges)
     endif
   endwhile
 endfunction
-function! s:ascii(buf, state, type, char, text, coldata)
+function! Ascii(buf, state, type, char, text, coldata)
   " prints an ASCII graph of the DAG
 
   " takes the following arguments (one call per node in the graph):
@@ -104,7 +104,7 @@ function! s:ascii(buf, state, type, char, text, coldata)
     "     o | |  into  o---+
     "     |X /         |/ /
     "     | |          | |
-    call s:fix_long_right_edges(edges)
+    call Fix_long_right_edges(edges)
   endif
 
   " add_padding_line says whether to rewrite
@@ -131,7 +131,7 @@ function! s:ascii(buf, state, type, char, text, coldata)
   call extend(nodeline, [a:char, ' '])
 
   call extend(nodeline,
-        \ s:get_nodeline_edges_tail(
+        \ Get_nodeline_edges_tail(
         \   idx, a:state[1], ncols, coldiff, a:state[0], fix_nodeline_tail))
 
   " shift_interline is the line containing the non-vertical
@@ -151,7 +151,7 @@ function! s:ascii(buf, state, type, char, text, coldata)
   call extend(shift_interline, repeat([edge_ch, ' '], ncols - idx - 1))
 
   " draw edges from the current node to its parents.
-  call s:draw_edges(edges, nodeline, shift_interline)
+  call Draw_edges(edges, nodeline, shift_interline)
 
   " lines is the list of all graph lines to print.
   let lines = [nodeline]
@@ -184,10 +184,10 @@ function! s:ascii(buf, state, type, char, text, coldata)
   let a:state[0] = coldiff
   let a:state[1] = idx
 endfunction
-function! s:generate(dag, edgefn, current)
+function! Generate(dag, edgefn, current)
   let seen = []
   let state = [0,0]
-  let buf = s:buffer()
+  let buf = Buffer()
   " TODO what's that list?
   for [node, parents] in a:dag
     let age_label = get(node, 'time', 'Original')
@@ -197,13 +197,13 @@ function! s:generate(dag, edgefn, current)
     else
       let char = 'o'
     endif
-    call s:ascii(
+    call Ascii(
           \ buf, state, 'C', char, [line],
           \ call(a:edgefn, [seen, node, parents]))
   endfor
   return buf.b
 endfunction
-function! s:age(ts)
+function! Age(ts)
   let agescales = [
         \ ['year',   60 * 60 * 24 * 365],
         \ ['month',  60 * 60 * 24 * 30],
@@ -230,11 +230,11 @@ function! s:age(ts)
     endif
   endfor
 endfunction
-function! s:check_sanity()
+function! Check_sanity()
   " TODO Do something useful.
   return 1
 endfunction
-function! s:buffer()
+function! Buffer()
   let d = {}
   let d.b = ''
   function d.write(s)
@@ -242,7 +242,7 @@ function! s:buffer()
   endfunction
   return d
 endfunction
-function! s:node(n, parent, time, curhead, newhead) "{{{1
+function! Node(n, parent, time, curhead, newhead) "{{{1
   let node = {}
   let node.n = a:n
   let node.parent = a:parent
@@ -252,15 +252,15 @@ function! s:node(n, parent, time, curhead, newhead) "{{{1
   let node.children = []
   return node
 endfunction
-function! s:_make_nodes(alts, nodes, ...) "{{{1
+function! Make_nodes(alts, nodes, ...) "{{{1
   let parent = a:0 ? a:1 : {}
   for alt in a:alts
     let curhead = has_key(alt, 'curhead')
     let newhead = has_key(alt, 'newhead')
-    let node = s:node(alt.seq, parent, alt.time, curhead, newhead)
+    let node = Node(alt.seq, parent, alt.time, curhead, newhead)
     call add(a:nodes, node)
     if has_key(node, 'alt')
-      call s:_make_nodes(alt.alt, nodes, parent)
+      call Make_nodes(alt.alt, nodes, parent)
     endif
     let parent = node
   endfor
@@ -269,8 +269,8 @@ function! sacha_undo#make_nodes() "{{{1
   let undotree = undotree()
   let entries = undotree.entries
   let nodes = []
-  let root = s:node(0, {}, 0, 0, 0)
-  call s:_make_nodes(entries, nodes, root)
+  let root = Node(0, {}, 0, 0, 0)
+  call Make_nodes(entries, nodes, root)
   let nmap = {}
   call add(nodes, root)
   for node in nodes
@@ -279,7 +279,7 @@ function! sacha_undo#make_nodes() "{{{1
   endfor
   return [nodes, nmap]
 endfunction
-function! s:changenr(nodes)
+function! Changenr(nodes)
   for node in a:nodes
     if node.curhead
       return node.parent.n
@@ -288,7 +288,7 @@ function! s:changenr(nodes)
   return changenr()
 endfunction
 function! sacha_undo#render_graph()
-  if !s:check_sanity()
+  if !Check_sanity()
     return
   endif
   let [nodes, nmap] = sacha_undo#make_nodes()
@@ -296,11 +296,11 @@ function! sacha_undo#render_graph()
     let node.children = filter(copy(nodes), 'v:val.parent is node')
   endfor
   let dag = sort(copy(nodes), 's:compare_fn')
-  let current = s:changenr(nodes)
+  let current = Changenr(nodes)
 
-  let string = s:generate(
+  let string = Generate(
         \ map(copy(dag), '[v:val, !empty(v:val.parent) ? [v:val.parent] : []]'),
-        \ 's:asciiedges', current
+        \ 'Asciiedges', current
         \ )
   let string = matchstr(string, '.*\S\ze\s*$')
   let result = split(string, "\<NL>")
