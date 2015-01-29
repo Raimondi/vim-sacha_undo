@@ -260,7 +260,7 @@ function! s:_make_nodes(alts, nodes, ...) "{{{1
     let node = s:node(alt.seq, parent, alt.time, curhead, newhead)
     call add(a:nodes, node)
     if has_key(node, 'alt')
-      call s:_make_nodes(alt.alt, parent)
+      call s:_make_nodes(alt.alt, nodes, parent)
     endif
     let parent = node
   endfor
@@ -272,6 +272,7 @@ function! sacha_undo#make_nodes() "{{{1
   let root = s:node(0, {}, 0, 0, 0)
   call s:_make_nodes(entries, nodes, root)
   let nmap = {}
+  call add(nodes, root)
   for node in nodes
     call extend(nmap, {node.n: node})
     let node.children = filter(copy(nodes), 'v:val.parent is node')
