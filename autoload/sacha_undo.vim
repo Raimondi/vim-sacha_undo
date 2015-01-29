@@ -13,20 +13,20 @@ function! s:asciiedges(seen, rev, parents)
     else
       call add(newparents, parent)
     endif
+  endfor
+  let ncols = len(a:seen)
+  call remove(a:seen, nodeidx)
+  call insert(a:seen, newparents, nodeidx)
+  let edges = map(copy(knownparents), '[nodeidx, index(a:seen, v.val)]')
+  if len(newparents) > 0
+    call add(edges, [nodeidx, nodeidx])
+  endif
+  if len(newparents) > 1
+    call add(edges, [nodeidx, nodeidx + 1])
+  endif
 
-    let ncols = len(a:seen)
-    call remove(a:seen, nodeidx)
-    call insert(a:seen, newparents, nodeidx)
-    let edges = map(copy(knownparents), '[nodeidx, index(a:seen, v.val)]')
-    if len(newparents) > 0
-      call add(edges, [nodeidx, nodeidx])
-    endif
-    if len(newparents) > 1
-      call add(edges, [nodeidx, nodeidx + 1])
-    endif
-
-    let nmorecols = len(a:seen) - ncols
-    return [nodeidx, edges, ncols, nmorecols]
+  let nmorecols = len(a:seen) - ncols
+  return [nodeidx, edges, ncols, nmorecols]
 endfunction
 function! s:get_nodeline_edges_tail(
       \ node_index, p_node_index, n_columns, n_columns_diff, p_diff, fix_tail
@@ -107,82 +107,82 @@ function! s:ascii(buf, state, type, char, text, coldata)
     call s:fix_long_right_edges(edges)
   endif
 
-    " add_padding_line says whether to rewrite
-    "
-    "     | | | |        | | | |
-    "     | o---+  into  | o---+
-    "     |  / /         |   | |  # <--- padding line
-    "     o | |          |  / /
-    "                    o | |
-    let add_padding_line = len(a:text) > 2 && coldiff == -1
-          \ && !empty(filter(copy(edges), 'v:val[0] + 1 < v:val[1]'))
+  " add_padding_line says whether to rewrite
+  "
+  "     | | | |        | | | |
+  "     | o---+  into  | o---+
+  "     |  / /         |   | |  # <--- padding line
+  "     o | |          |  / /
+  "                    o | |
+  let add_padding_line = len(a:text) > 2 && coldiff == -1
+        \ && !empty(filter(copy(edges), 'v:val[0] + 1 < v:val[1]'))
 
-    " fix_nodeline_tail says whether to rewrite
-    "
-    "     | | o | |        | | o | |
-    "     | | |/ /         | | |/ /
-    "     | o | |    into  | o / /   # <--- fixed nodeline tail
-    "     | |/ /           | |/ /
-    "     o | |            o | |
-    let fix_nodeline_tail = len(a:text) <= 2 && ! add_padding_line
+  " fix_nodeline_tail says whether to rewrite
+  "
+  "     | | o | |        | | o | |
+  "     | | |/ /         | | |/ /
+  "     | o | |    into  | o / /   # <--- fixed nodeline tail
+  "     | |/ /           | |/ /
+  "     o | |            o | |
+  let fix_nodeline_tail = len(a:text) <= 2 && ! add_padding_line
 
-    " nodeline is the line containing the node character (typically o)
-    let nodeline = repeat(['|', ' '], idx)
-    call extend(nodeline, [a:char, ' '])
+  " nodeline is the line containing the node character (typically o)
+  let nodeline = repeat(['|', ' '], idx)
+  call extend(nodeline, [a:char, ' '])
 
-    call extend(nodeline,
-          \ s:get_nodeline_edges_tail(
-          \   idx, a:state[1], ncols, coldiff, a:state[0], fix_nodeline_tail))
+  call extend(nodeline,
+        \ s:get_nodeline_edges_tail(
+        \   idx, a:state[1], ncols, coldiff, a:state[0], fix_nodeline_tail))
 
-    " shift_interline is the line containing the non-vertical
-    " edges between this entry and the next
-    let shift_interline = repeat(['|', ' '], idx)
-    if coldiff == -1
-      let n_spaces = 1
-      let edge_cg = '/'
-    elseif coldiff == 0
-      let n_spaces = 2
-      let edge_ch = '|'
-    else
-      let n_spaces = 3
-      let edge_ch = '\'
-    endif
-    call extend(shift_interline, repeat([' '], n_spaces))
-    call extend(shift_interline, repeat([edge_ch, ' '], ncols - idx - 1))
+  " shift_interline is the line containing the non-vertical
+  " edges between this entry and the next
+  let shift_interline = repeat(['|', ' '], idx)
+  if coldiff == -1
+    let n_spaces = 1
+    let edge_cg = '/'
+  elseif coldiff == 0
+    let n_spaces = 2
+    let edge_ch = '|'
+  else
+    let n_spaces = 3
+    let edge_ch = '\'
+  endif
+  call extend(shift_interline, repeat([' '], n_spaces))
+  call extend(shift_interline, repeat([edge_ch, ' '], ncols - idx - 1))
 
-    " draw edges from the current node to its parents.
-    call s:draw_edges(edges, nodeline, shift_interline)
+  " draw edges from the current node to its parents.
+  call s:draw_edges(edges, nodeline, shift_interline)
 
-    " lines is the list of all graph lines to print.
-    let lines = [nodeline]
-    if add_padding_line
-      call append(lines, s:get_padding_line(idx, ))
-    endif
-    call add(lines, shift_interline)
+  " lines is the list of all graph lines to print.
+  let lines = [nodeline]
+  if add_padding_line
+    call append(lines, s:get_padding_line(idx, ))
+  endif
+  call add(lines, shift_interline)
 
-    " make sure that there are as many graph lines as there are
-    " log strings
-    while len(a:text) < len(lines)
-      call add(a:text, '')
+  " make sure that there are as many graph lines as there are
+  " log strings
+  while len(a:text) < len(lines)
+    call add(a:text, '')
+  endwhile
+  if len(lines) < len(a:text)
+    let extra_interline = repeat(['|', ' '], ncols + coldiff)
+    while len(lines) < len(a:text)
+      call add(lines, extra_interline)
     endwhile
-    if len(lines) < len(a:text)
-      let extra_interline = repeat(['|', ' '], ncols + coldiff)
-      while len(lines) < len(a:text)
-        call add(lines, extra_interline)
-      endwhile
-    endif
+  endif
 
-    " print lines.
-    let indentation_level = max([ncols, ncols + coldiff])
-    for [line, logstr] in
-          \ map(range(len(lines)), '[lines[v:val], a:text[v:val]]')
-      let ln = printf('%-*s %s', 2 * indentation_level, join(line, ''), logstr)
-      call a:buf.write(matchstr(ln, '^.*\S\ze\s*$') . "\<NL>")
-    endfor
+  " print lines.
+  let indentation_level = max([ncols, ncols + coldiff])
+  for [line, logstr] in
+        \ map(range(len(lines)), '[lines[v:val], a:text[v:val]]')
+    let ln = printf('%-*s %s', 2 * indentation_level, join(line, ''), logstr)
+    call a:buf.write(matchstr(ln, '^.*\S\ze\s*$') . "\<NL>")
+  endfor
 
-    " ... and start over.
-    let a:state[0] = coldiff
-    let a:state[1] = idx
+  " ... and start over.
+  let a:state[0] = coldiff
+  let a:state[1] = idx
 endfunction
 function! s:generate(dag, edgefn, current)
   let seen = []
