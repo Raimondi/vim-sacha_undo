@@ -12,9 +12,13 @@ function! undoing#node#new(n, parent, time, curhead, newhead) "{{{1
           \ .  ', time='      .  self.time
           \ .  ', curhead='   .  self.curhead
           \ .  ', newhead='   .  self.newhead
-          \ .  ', children='  .  string(map(deepcopy(self.children), 'v:val.n'))
-          \ .  ', parent='    .  (empty(self.parent) ? 'None' : self.parent.n)
+          \ .  ', children='  .  string(map(copy(self.children), 'v:val.n'))
+          \ .  ', parent='    .  self.parent.n
   endfunction
 
   return node
+endfunction
+
+function! undoing#node#root()
+  return undoing#node#new(0, {'n' : -1}, 0, 0, 0)
 endfunction

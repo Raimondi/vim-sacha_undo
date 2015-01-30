@@ -18,27 +18,31 @@ endfunction
 
 function! undoing#tree#new(...)
   let tree = {}
-  let tree.tree = {}
-  let tree.nodes = [undoing#node#new(0, {}, 0, 0, 0)]
+  let tree.undotree = {}
+  let tree.nodes = [undoing#node#root()]
   let tree.root = tree.nodes[0]
   let tree.nmap = {}
 
   if a:0
-    let tree.tree = a:1
+    let tree.undotree = a:1
   else
-    let tree.tree = undotree()
+    let tree.undotree = undotree()
   endif
 
-  call s:make_nodes(tree.tree.entries, tree.nodes, tree.root)
+  call s:make_nodes(tree.undotree.entries, tree.nodes, tree.root)
+  unlet tree.undotree
 
   for node in tree.nodes
     call extend(tree.nmap, {node.n: node})
-    let node.children = filter(copy(tree.nodes), 'v:val.parent is node')
+    let node.children = filter(copy(tree.nodes), 'v:val.parent == node')
   endfor
 
   func tree.dag() dict
-    let dag = sort(deepcopy(self.nodes), 's:by_node_num')
-    return map(dag, '[v:val, !empty(v:val.parent) ? [v:val.parent] : []]'),
+    " WARNING: deepcopy() not possible because nodes is cyclic
+    " TODO: do we need to copy self.nodes here at all?
+          " \ , '[v:val, !empty(v:val.parent) ? [v:val.parent] : []]')
+    return map(sort(copy(self.nodes), 's:by_node_num')
+          \ , '[v:val, [v:val.parent]]')
   endfunc
 
   func tree.print() dict

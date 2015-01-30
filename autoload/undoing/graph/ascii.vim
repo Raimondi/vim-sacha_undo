@@ -1,7 +1,7 @@
-function! Asciiedges(seen, rev, parents)
+function! s:asciiedges(seen, rev, parents)
   " Adds edge info to changelog DAG walk suitable for Ascii()
-  " echom 'Asciiedges: a:rev = '  . a:rev.to_s()
-  " echom 'Asciiedges: a:seen = ' . PrintNodes(a:seen)
+  " echom 's:asciiedges: a:rev = '  . a:rev.to_s()
+  " echom 's:asciiedges: a:seen = ' . PrintNodes(a:seen)
 
   if index(a:seen, a:rev) == -1
     call add(a:seen, a:rev)
@@ -32,7 +32,7 @@ function! Asciiedges(seen, rev, parents)
   return [nodeidx, edges, ncols, nmorecols]
 endfunction
 
-function! Ascii(buf, state, type, char, text, coldata)
+function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
   " prints an ASCII graph of the DAG
 
   " takes the following arguments (one call per node in the graph):
@@ -49,7 +49,7 @@ function! Ascii(buf, state, type, char, text, coldata)
   "   - The difference between the number of columns (ongoing edges)
   "     in the next revision and the number of columns (ongoing edges)
   "     in the current revision. That is: -1 means one column removed;
-  let [idx, edges, ncols, coldiff] = a:coldata
+  let [idx, edges, ncols, coldiff] = call('s:asciiedges', a:coldata)
   if coldiff < -2 || coldiff > 2
     throw 'Something something'
   endif
@@ -60,7 +60,7 @@ function! Ascii(buf, state, type, char, text, coldata)
     "     o | |  into  o---+
     "     |X /         |/ /
     "     | |          | |
-    call Fix_long_right_edges(edges)
+    call s:fix_long_right_edges(edges)
   endif
 
   " add_padding_line says whether to rewrite
@@ -87,7 +87,7 @@ function! Ascii(buf, state, type, char, text, coldata)
   call extend(nodeline, [a:char, ' '])
 
   call extend(nodeline,
-        \ Get_nodeline_edges_tail(
+        \ s:get_nodeline_edges_tail(
         \   idx, a:state[1], ncols, coldiff, a:state[0], fix_nodeline_tail))
 
   " shift_interline is the line containing the non-vertical
@@ -107,7 +107,7 @@ function! Ascii(buf, state, type, char, text, coldata)
   call extend(shift_interline, repeat([edge_ch, ' '], ncols - idx - 1))
 
   " draw edges from the current node to its parents.
-  call Draw_edges(edges, nodeline, shift_interline)
+  call s:draw_edges(edges, nodeline, shift_interline)
 
   " lines is the list of all graph lines to print.
   let lines = [nodeline]
@@ -141,8 +141,7 @@ function! Ascii(buf, state, type, char, text, coldata)
   let a:state[1] = idx
 endfunction
 
-
-function! Get_nodeline_edges_tail(
+function! s:get_nodeline_edges_tail(
       \ node_index, p_node_index, n_columns, n_columns_diff, p_diff, fix_tail
       \)
   if a:fix_tail && a:n_columns_diff == a:p_diff && a:n_columns_diff != 0
@@ -160,7 +159,7 @@ function! Get_nodeline_edges_tail(
   endif
 endfunction
 
-function! Draw_edges(edges, nodeline, interline)
+function! s:draw_edges(edges, nodeline, interline)
   for [start, end] in a:edges
     if start == end + 1
       let a:interline[2 * end + 1] = '/'
@@ -182,7 +181,7 @@ function! Draw_edges(edges, nodeline, interline)
   endfor
 endfunction
 
-function! Fix_long_right_edges(edges)
+function! s:fix_long_right_edges(edges)
   let i = 0
   let len = len(a:edges)
   while i < len
