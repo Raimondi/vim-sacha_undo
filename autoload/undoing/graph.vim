@@ -1,12 +1,37 @@
-function! s:buffer()
-  let d = {}
-  let d.b = ''
+function! undoing#graph#new(...)
+  let graph = {}
+  if a:0
+    let graph.tree = undoing#tree#new(a:1)
+  else
+    let graph.tree = undoing#tree#new()
+  endif
 
-  function d.write(s)
-    let self.b .= a:s
-  endfunction
+  func graph.generate() dict
+    let current = self.tree.changenr()
+    let seen = []
+    let state = [0,0]
+    let buf = []
 
-  return d
+    for [node, parents] in self.tree.dag()
+      let age_label = (node.time == 0) ? 'Original' : s:age(node.time)
+      let line = printf('[%s] %s', node.n, age_label)
+      if node.n == current
+        let char = '@'
+      else
+        let char = 'o'
+      endif
+      call undoing#graph#ascii#render(buf, state, 'C', char, [line]
+            \ , [seen, node, parents])
+    endfor
+
+    return buf
+  endfunc
+
+  func graph.render() dict
+    return join(map(self.generate(), '" " . v:val'), "\n")
+  endfunc
+
+  return graph
 endfunction
 
 let s:agescales = [
@@ -42,50 +67,3 @@ function! s:age(ts)
   endfor
 endfunction
 
-function! undoing#graph#new(...)
-  let graph = {}
-  if a:0
-    let graph.tree = undoing#tree#new(a:1)
-  else
-    let graph.tree = undoing#tree#new()
-  endif
-
-  func graph.check_sanity() dict
-    " TODO Do something useful.
-    return 1
-  endfunc
-
-  func graph.generate()
-    let current = self.tree.changenr()
-    let seen = []
-    let state = [0,0]
-    let buf = s:buffer()
-    for [node, parents] in self.tree.dag()
-      let age_label = (node.time == 0) ? 'Original' : s:age(node.time)
-      let line = printf('[%s] %s', node.n, age_label)
-      if node.n == current
-        let char = '@'
-      else
-        let char = 'o'
-      endif
-      call undoing#graph#ascii#render(buf, state, 'C', char, [line]
-            \ , [seen, node, parents])
-    endfor
-    return buf.b
-  endfunc
-
-  func graph.render() dict
-    if ! self.check_sanity()
-      return
-    endif
-
-    let string = self.generate()
-    let string = matchstr(string, '.*\S\ze\s*$')
-    let result = split(string, "\<NL>")
-    call map(result, '" " . v:val')
-
-    return result
-  endfunc
-
-  return graph
-endfunction

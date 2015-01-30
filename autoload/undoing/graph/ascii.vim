@@ -1,37 +1,3 @@
-function! s:asciiedges(seen, rev, parents)
-  " Adds edge info to changelog DAG walk suitable for Ascii()
-  " echom 's:asciiedges: a:rev = '  . a:rev.to_s()
-  " echom 's:asciiedges: a:seen = ' . PrintNodes(a:seen)
-
-  if index(a:seen, a:rev) == -1
-    call add(a:seen, a:rev)
-  endif
-  let nodeidx = index(a:seen, a:rev)
-
-  let knownparents = []
-  let newparents = []
-  for parent in a:parents
-    if index(a:seen, parent) > -1
-      call add(knownparents, parent)
-    else
-      call add(newparents, parent)
-    endif
-  endfor
-  let ncols = len(a:seen)
-  call remove(a:seen, nodeidx)
-  call extend(a:seen, newparents, nodeidx)
-  let edges = map(copy(knownparents), '[nodeidx, index(a:seen, v:val)]')
-  if len(newparents) > 0
-    call add(edges, [nodeidx, nodeidx])
-  endif
-  if len(newparents) > 1
-    call add(edges, [nodeidx, nodeidx + 1])
-  endif
-
-  let nmorecols = len(a:seen) - ncols
-  return [nodeidx, edges, ncols, nmorecols]
-endfunction
-
 function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
   " prints an ASCII graph of the DAG
 
@@ -133,12 +99,53 @@ function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
   for [line, logstr] in
         \ map(range(len(lines)), '[lines[v:val], a:text[v:val]]')
     let ln = printf('%-*s %s', 2 * indentation_level, join(line, ''), logstr)
-    call a:buf.write(matchstr(ln, '^.*\S\ze\s*$') . "\<NL>")
+    call extend(a:buf, [matchstr(ln, '^.*\S\ze\s*$')])
   endfor
 
   " ... and start over.
   let a:state[0] = coldiff
   let a:state[1] = idx
+endfunction
+
+function! s:asciiedges(seen, rev, parents)
+  " Adds edge info to undotree DAG walk suitable for
+  " undoing#graph#ascii#render()
+
+  if index(a:seen, a:rev) == -1
+    call add(a:seen, a:rev)
+  endif
+
+  let nodeidx = index(a:seen, a:rev)
+
+  let knownparents = []
+  let newparents = []
+
+  for parent in a:parents
+    if index(a:seen, parent) > -1
+      call add(knownparents, parent)
+    else
+      call add(newparents, parent)
+    endif
+  endfor
+
+  let ncols = len(a:seen)
+
+  call remove(a:seen, nodeidx)
+  call extend(a:seen, newparents, nodeidx)
+
+  let edges = map(copy(knownparents), '[nodeidx, index(a:seen, v:val)]')
+
+  if len(newparents) > 0
+    call add(edges, [nodeidx, nodeidx])
+  endif
+
+  if len(newparents) > 1
+    call add(edges, [nodeidx, nodeidx + 1])
+  endif
+
+  let nmorecols = len(a:seen) - ncols
+
+  return [nodeidx, edges, ncols, nmorecols]
 endfunction
 
 function! s:get_nodeline_edges_tail(
