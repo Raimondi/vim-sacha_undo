@@ -1,12 +1,13 @@
-function! s:make_nodes(alts, nodes, parent) "{{{1
+function! s:make_nodes(alts, nodes, nmap, parent) "{{{1
   let parent = a:parent
   for alt in a:alts
     let curhead = has_key(alt, 'curhead')
     let newhead = has_key(alt, 'newhead')
     let node = undoing#node#new(alt.seq, parent, alt.time, curhead, newhead)
+    call extend(a:nmap, {node.n: node})
     call add(a:nodes, node)
     if has_key(alt, 'alt')
-      call s:make_nodes(alt.alt, a:nodes, parent)
+      call s:make_nodes(alt.alt, a:nodes, a:nmap, parent)
     endif
     let parent = node
   endfor
@@ -29,13 +30,8 @@ function! undoing#tree#new(...)
     let tree.undotree = undotree()
   endif
 
-  call s:make_nodes(tree.undotree.entries, tree.nodes, tree.root)
+  call s:make_nodes(tree.undotree.entries, tree.nodes, tree.nmap, tree.root)
   unlet tree.undotree
-
-  for node in tree.nodes
-    call extend(tree.nmap, {node.n: node})
-    let node.children = filter(copy(tree.nodes), 'v:val.parent == node')
-  endfor
 
   func tree.dag() dict
     " WARNING: deepcopy() not possible because nodes is cyclic
