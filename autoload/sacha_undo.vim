@@ -191,7 +191,7 @@ function! Generate(dag, edgefn, current)
   let buf = Buffer()
   " TODO what's that list?
   for [node, parents] in a:dag
-    let age_label = (node.time == 0) ? 'Original' : (strftime('%S', node.time) . ' seconds ago')
+    let age_label = (node.time == 0) ? 'Original' : Age(node.time)
     let line = printf('[%s] %s', node.n, age_label)
     if node.n == a:current
       let char = '@'
@@ -220,10 +220,10 @@ function! Age(ts)
     return 'in the future'
   endif
   let delta = max([1, now - then])
-  if delta > agescale[0][1] * 2
+  if delta > agescales[0][1] * 2
     return strftime('%Y-%m-%d', a:ts)
   endif
-  for [t, s] in agescale
+  for [t, s] in agescales
     let n = delta / s
     if n >= 2 || s == 1
       let str = printf('%d %s', n, n == 1 ? t : t . 's')
