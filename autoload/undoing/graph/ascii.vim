@@ -16,6 +16,15 @@ function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
   "     in the next revision and the number of columns (ongoing edges)
   "     in the current revision. That is: -1 means one column removed;
   let [idx, edges, ncols, coldiff] = call('s:asciiedges', a:coldata)
+
+  " [seen, node, parents] = [list, elem, list]
+
+  echo '.'
+  echo ['state', a:state, 'char', a:char, 'text', a:text]
+  echo ['seen', undoing#node#print(a:coldata[0])]
+  echo ['node', a:coldata[1].to_s()]
+  echo ['parents', undoing#node#print(a:coldata[2])]
+  echo ['idx', idx, 'edges', edges, 'ncols', ncols, 'coldiff', coldiff]
   if coldiff < -2 || coldiff > 2
     throw 'Something something'
   endif
@@ -36,8 +45,8 @@ function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
   "     |  / /         |   | |  # <--- padding line
   "     o | |          |  / /
   "                    o | |
-  let add_padding_line = len(a:text) > 2 && coldiff == -1
-        \ && !empty(filter(copy(edges), 'v:val[0] + 1 < v:val[1]'))
+  let add_padding_line = (len(a:text) > 2) && (coldiff == -1)
+        \ && ! empty(filter(copy(edges), 'v:val[0] + 1 < v:val[1]'))
 
   " fix_nodeline_tail says whether to rewrite
   "
@@ -78,7 +87,8 @@ function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
   " lines is the list of all graph lines to print.
   let lines = [nodeline]
   if add_padding_line
-    call append(lines, s:get_padding_line(idx, ))
+    " TODO: append or extend here?
+    call add(lines, s:get_padding_line(idx, ))
   endif
   call add(lines, shift_interline)
 
@@ -151,7 +161,7 @@ endfunction
 function! s:get_nodeline_edges_tail(
       \ node_index, p_node_index, n_columns, n_columns_diff, p_diff, fix_tail
       \)
-  if a:fix_tail && a:n_columns_diff == a:p_diff && a:n_columns_diff != 0
+  if a:fix_tail && (a:n_columns_diff == a:p_diff) && (a:n_columns_diff != 0)
     " Still going in the same non-vertical direction.
     if a:n_columns_diff == -1
       let start = max([a:node_index + 1, a:p_node_index])
@@ -159,7 +169,7 @@ function! s:get_nodeline_edges_tail(
       call extend(tail, repeat(['/', ' '], a:n_columns - start))
       return tail
     else
-      return repeat(['\'. ' '], a:n_columns - a:node_index - 1)
+      return repeat(['\', ' '], a:n_columns - a:node_index - 1)
     endif
   else
     return repeat(['|', ' '], a:n_columns - a:node_index - 1)

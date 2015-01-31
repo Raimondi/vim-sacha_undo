@@ -17,6 +17,18 @@ function! undoing#node#new(n, parent, time, curhead, newhead) "{{{1
   return node
 endfunction
 
+function! undoing#node#print(nodelist)
+  let s = []
+  for n in a:nodelist
+    call extend(s, [n.to_s()])
+  endfor
+  return string(s)
+endfunction
+
+function! s:empty_to_s()
+  return ''
+endfunction
+
 function! undoing#node#root()
-  return undoing#node#new(0, {'n' : -1}, 0, 0, 0)
+  return undoing#node#new(0, {'n' : -1, 'to_s' : function('s:empty_to_s')}, 0, 0, 0)
 endfunction
