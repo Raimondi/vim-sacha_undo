@@ -87,7 +87,6 @@ function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
   " lines is the list of all graph lines to print.
   let lines = [nodeline]
   if add_padding_line
-    " TODO: append or extend here?
     call add(lines, s:get_padding_line(idx, ))
   endif
   call add(lines, shift_interline)
@@ -109,7 +108,8 @@ function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
   for [line, logstr] in
         \ map(range(len(lines)), '[lines[v:val], a:text[v:val]]')
     let ln = printf('%-*s %s', 2 * indentation_level, join(line, ''), logstr)
-    call extend(a:buf, [matchstr(ln, '^.*\S\ze\s*$')])
+    " call add(a:buf, matchstr(ln, '^.*\S\ze\s*$'))
+    call add(a:buf, ln)
   endfor
 
   " ... and start over.
@@ -189,7 +189,8 @@ function! s:draw_edges(edges, nodeline, interline)
       if start > end
         let [start, end] = [end, start]
       endif
-      for i in range(2 * start + 1, 2 * end)
+      " TODO - should we use   end-1   here or is end broken in edges?
+      for i in range(2 * start + 1, 2 * end - 1)
         if a:nodeline[i] != '+'
           let a:nodeline[i] = '-'
         endif
