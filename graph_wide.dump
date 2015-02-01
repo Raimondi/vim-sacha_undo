@@ -1,0 +1,71 @@
+1. Undotree:                                  2. ascii() arguments:
+
+{'seq_last': 10,                              ['state', [0, 0], 'char', '@', 'text', ['[10] 68 minutes ago']] ['idx', 0, 'edges', [[0, 0]], 'ncols', 1, 'coldiff', 0]
+ 'entries': [                                 ['seen', '[''n=7, time=1422670310, curhead=0, newhead=0, parent=3'']']
+  { 'seq': 1, 'time': 1422670282 },           ['node', 'n=10, time=1422670334, curhead=0, newhead=1, parent=7'] ['parents', '[''n=7, time=1422670310, curhead=0, newhead=0, parent=3'']']
+  { 'seq': 2, 'time': 1422670283 },
+  {                                           ['state', [0, 0], 'char', 'o', 'text', ['[9] 68 minutes ago']] ['idx', 1, 'edges', [[1, 1]], 'ncols', 2, 'coldiff', 0]
+    'seq': 3, 'time': 1422670285              ['seen', '[''n=7, time=1422670310, curhead=0, newhead=0, parent=3'', ''n=4, time=1422670288, curhead=0, newhead=0, parent=2'']']
+    'alt': [                                  ['node', 'n=9, time=1422670329, curhead=0, newhead=0, parent=4'] ['parents', '[''n=4, time=1422670288, curhead=0, newhead=0, parent=2'']']
+      { 'seq': 4, 'time': 1422670288 },
+      {                                       ['state', [0, 1], 'char', 'o', 'text', ['[8] 69 minutes ago']] ['idx', 2, 'edges', [[2, 1]], 'ncols', 3, 'coldiff', -1]
+        'seq': 8, 'time': 1422670320          ['seen', '[''n=7, time=1422670310, curhead=0, newhead=0, parent=3'', ''n=4, time=1422670288, curhead=0, newhead=0, parent=2'']']
+        'alt': [                              ['node', 'n=8, time=1422670320, curhead=0, newhead=0, parent=4'] ['parents', '[''n=4, time=1422670288, curhead=0, newhead=0, parent=2'']']
+          { 'seq': 9, 'time': 1422670329 }
+        ],                                    ['state', [-1, 2], 'char', 'o', 'text', ['[7] 69 minutes ago']] ['idx', 0, 'edges', [[0, 0]], 'ncols', 2, 'coldiff', 0]
+      }                                       ['seen', '[''n=3, time=1422670285, curhead=0, newhead=0, parent=2'', ''n=4, time=1422670288, curhead=0, newhead=0, parent=2'']']
+    ],                                        ['node', 'n=7, time=1422670310, curhead=0, newhead=0, parent=3'] ['parents', '[''n=3, time=1422670285, curhead=0, newhead=0, parent=2'']']
+  },
+  {                                           ['state', [0, 0], 'char', 'o', 'text', ['[6] 69 minutes ago']] ['idx', 2, 'edges', [[2, 0]], 'ncols', 3, 'coldiff', -1]
+    'seq': 7, 'time': 1422670310              ['seen', '[''n=3, time=1422670285, curhead=0, newhead=0, parent=2'', ''n=4, time=1422670288, curhead=0, newhead=0, parent=2'']']
+    'alt': [                                  ['node', 'n=6, time=1422670304, curhead=0, newhead=0, parent=3'] ['parents', '[''n=3, time=1422670285, curhead=0, newhead=0, parent=2'']']
+      {
+        'seq': 5, 'time': 1422670302          ['state', [-1, 2], 'char', 'o', 'text', ['[5] 69 minutes ago']] ['idx', 2, 'edges', [[2, 0]], 'ncols', 3, 'coldiff', -1]
+        'alt': [                              ['seen', '[''n=3, time=1422670285, curhead=0, newhead=0, parent=2'', ''n=4, time=1422670288, curhead=0, newhead=0, parent=2'']']
+          { 'seq': 6, 'time': 1422670304 }    ['node', 'n=5, time=1422670302, curhead=0, newhead=0, parent=3'] ['parents', '[''n=3, time=1422670285, curhead=0, newhead=0, parent=2'']']
+        ],
+      }                                       ['state', [-1, 2], 'char', 'o', 'text', ['[4] 69 minutes ago']] ['idx', 1, 'edges', [[1, 1]], 'ncols', 2, 'coldiff', 0]
+    ],                                        ['seen', '[''n=3, time=1422670285, curhead=0, newhead=0, parent=2'', ''n=2, time=1422670283, curhead=0, newhead=0, parent=1'']']
+  },                                          ['node', 'n=4, time=1422670288, curhead=0, newhead=0, parent=2'] ['parents', '[''n=2, time=1422670283, curhead=0, newhead=0, parent=1'']']
+  { 'seq': 10,
+    'time': 1422670334,                       ['state', [0, 1], 'char', 'o', 'text', ['[3] 69 minutes ago']] ['idx', 0, 'edges', [[0, 0]], 'ncols', 2, 'coldiff', -1]
+    'newhead': 1                              ['seen', '[''n=2, time=1422670283, curhead=0, newhead=0, parent=1'']']
+  }                                           ['node', 'n=3, time=1422670285, curhead=0, newhead=0, parent=2'] ['parents', '[''n=2, time=1422670283, curhead=0, newhead=0, parent=1'']']
+ ],
+ 'time_cur'  : 1422670335,                    ['state', [-1, 0], 'char', 'o', 'text', ['[2] 69 minutes ago']] ['idx', 0, 'edges', [[0, 0]], 'ncols', 1, 'coldiff', 0]
+ 'save_last' : 0,                             ['seen', '[''n=1, time=1422670282, curhead=0, newhead=0, parent=0'']']
+ 'synced'    : 1,                             ['node', 'n=2, time=1422670283, curhead=0, newhead=0, parent=1'] ['parents', '[''n=1, time=1422670282, curhead=0, newhead=0, parent=0'']']
+ 'save_cur'  : 0,
+ 'seq_cur'   : 10                             ['state', [0, 0], 'char', 'o', 'text', ['[1] 69 minutes ago']] ['idx', 0, 'edges', [[0, 0]], 'ncols', 1, 'coldiff', 0]
+}                                             ['seen', '[''n=0, time=0, curhead=0, newhead=0, parent=-1'']']
+                                              ['node', 'n=1, time=1422670282, curhead=0, newhead=0, parent=0'] ['parents', '[''n=0, time=0, curhead=0, newhead=0, parent=-1'']']
+
+                                              ['state', [0, 0], 'char', 'o', 'text', ['[0] Original']] ['idx', 0, 'edges', [[0, 0]], 'ncols', 1, 'coldiff', 0]
+                                              ['seen', '['''']']
+                                              ['node', 'n=0, time=0, curhead=0, newhead=0, parent=-1'] ['parents', '['''']']
+
+3. Rendered tree:
+
+ @       [10] 68 minutes ago
+ |
+ | o     [9] 68 minutes ago
+ | |
+ | | o   [8] 69 minutes ago
+ | |/
+ o |     [7] 69 minutes ago
+ | |
+ +----   [6] 69 minutes ago
+ | |
+ +----   [5] 69 minutes ago
+ | |
+ | o     [4] 69 minutes ago
+ | |
+ o |     [3] 69 minutes ago
+ |/
+ o       [2] 69 minutes ago
+ |
+ o       [1] 69 minutes ago
+ |
+ o       [0] Original
+ |
+
