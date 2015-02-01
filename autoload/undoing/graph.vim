@@ -6,7 +6,8 @@ function! undoing#graph#new(...)
     let graph.tree = undoing#tree#new()
   endif
 
-  func graph.generate() dict
+  func graph.generate(...) dict
+    let generator = a:0 ? a:1 : 'ascii'
     let current = self.tree.changenr()
     let seen = []
     let state = [0,0]
@@ -20,15 +21,16 @@ function! undoing#graph#new(...)
       else
         let char = 'o'
       endif
-      call undoing#graph#ascii#render(buf, state, 'C', char, [line]
-            \ , [seen, node, parents])
+      call call('undoing#graph#' . generator . '#render'
+            \ , [buf, state, 'C', char, [line], [seen, node, parents]])
     endfor
 
     return s:format(buf)
   endfunc
 
-  func graph.render() dict
-    return join(map(self.generate(), '" " . v:val'), "\n")
+  func graph.render(...) dict
+    let generator = a:0 ? a:1 : 'ascii'
+    return join(map(self.generate(generator), '" " . v:val'), "\n")
   endfunc
 
   return graph
