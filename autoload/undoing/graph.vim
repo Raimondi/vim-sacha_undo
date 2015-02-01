@@ -25,7 +25,7 @@ function! undoing#graph#new(...)
             \ , [buf, state, 'C', char, [line], [seen, node, parents]])
     endfor
 
-    return s:format(buf)
+    return buf
   endfunc
 
   func graph.render(...) dict
@@ -67,27 +67,4 @@ function! s:age(ts)
       return printf('%s ago', str)
     endif
   endfor
-endfunction
-
-function! s:format(buf)
-  let tree_width = 0
-  let result = []
-
-  for l in a:buf
-    if l =~ '^[o|]'
-      let tree_width = max([tree_width, len(matchstr(l, '^.\{-}o'))])
-    endif
-  endfor
-
-  let tree_width += 2
-  for l in a:buf
-    if l =~ '\['
-      let [left, right] = split(l, '\[')
-      call add(result, printf("%-*s [%s", tree_width, left, right))
-    else
-      call add(result, printf("%-*s", tree_width, l))
-    endif
-  endfor
-
-  return result
 endfunction
