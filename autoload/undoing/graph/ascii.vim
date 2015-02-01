@@ -108,9 +108,13 @@ function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
   for [line, logstr] in
         \ map(range(len(lines)), '[lines[v:val], a:text[v:val]]')
     let ln = printf('%-*s %s', 2 * indentation_level, join(line, ''), logstr)
-    " call add(a:buf, matchstr(ln, '^.*\S\ze\s*$'))
     call add(a:buf, ln)
   endfor
+
+  if a:coldata[1].n == 0
+    " last of the nodes so format the buffer nicely
+    call s:format(a:buf)
+  endif
 
   " ... and start over.
   let a:state[0] = coldiff
@@ -211,26 +215,25 @@ function! s:fix_long_right_edges(edges)
   endwhile
 endfunction
 
-" TODO: wrangle this into the correct place
 function! s:format(buf)
   let tree_width = 0
   let result = []
 
   for l in a:buf
-    if l =~ '^[o|]'
+    if l =~ '^[o+|]'
       let tree_width = max([tree_width, len(matchstr(l, '^.\{-}o'))])
     endif
   endfor
 
   let tree_width += 2
+  let i = 0
   for l in a:buf
     if l =~ '\['
       let [left, right] = split(l, '\[')
-      call add(result, printf("%-*s [%s", tree_width, left, right))
+      let a:buf[i] = printf("%-*s [%s", tree_width, left, right)
     else
-      call add(result, printf("%-*s", tree_width, l))
+      let a:buf[i] = printf("%-*s", tree_width, l)
     endif
+    let i += 1
   endfor
-
-  return result
 endfunction
