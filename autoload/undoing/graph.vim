@@ -13,7 +13,7 @@ function! undoing#graph#new(...)
     let state = [0,0]
     let buf = []
 
-    for [node, parents] in self.tree.dag()
+    for [node, parent] in self.tree.dag()
       let age_label = (node.time == 0) ? 'Original' : s:age(node.time)
       let line = printf('[%s] %s', node.n, age_label)
       if node.n == current
@@ -22,7 +22,7 @@ function! undoing#graph#new(...)
         let char = 'o'
       endif
       call call('undoing#graph#' . generator . '#render'
-            \ , [buf, state, 'C', char, [line], [seen, node, parents]])
+            \ , [buf, state, char, [line], [seen, node, parent]])
     endfor
 
     return buf

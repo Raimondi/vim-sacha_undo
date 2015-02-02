@@ -19,7 +19,7 @@ function! undoing#tree#new(...)
     " TODO: do we need to copy self.nodes here at all?
           " \ , '[v:val, !empty(v:val.parent) ? [v:val.parent] : []]')
     return map(sort(copy(self.nodes), 's:by_node_num')
-          \ , '[v:val, [v:val.parent]]')
+          \ , '[v:val, v:val.parent]')
   endfunc
 
   func tree.print() dict

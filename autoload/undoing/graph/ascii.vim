@@ -1,4 +1,4 @@
-function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
+function! undoing#graph#ascii#render(buf, state, char, text, coldata)
   " prints an ASCII graph of the DAG
 
   " takes the following arguments (one call per node in the graph):
@@ -10,20 +10,20 @@ function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
   "     - Character to use as node's symbol.
   "     - List of lines to display as the node's text.
   "   - Edges; a list of (col, next_col) indicating the edges between
-  "     the current node and its parents.
+  "     the current node and its parent.
   "   - Number of columns (ongoing edges) in the current revision.
   "   - The difference between the number of columns (ongoing edges)
   "     in the next revision and the number of columns (ongoing edges)
   "     in the current revision. That is: -1 means one column removed;
   let [idx, edges, ncols, coldiff] = call('s:asciiedges', a:coldata)
 
-  " [seen, node, parents] = [list, elem, list]
+  " [seen, node, parent] = [list, elem, list]
 
   echo '.'
   echo ['state', a:state, 'char', a:char, 'text', a:text]
   echo ['seen', undoing#node#print(a:coldata[0])]
   echo ['node', a:coldata[1].to_s()]
-  echo ['parents', undoing#node#print(a:coldata[2])]
+  echo ['parent', undoing#node#print([a:coldata[2]])]
   echo ['idx', idx, 'edges', edges, 'ncols', ncols, 'coldiff', coldiff]
   if coldiff < -2 || coldiff > 2
     throw 'Something something'
@@ -81,7 +81,7 @@ function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
   call extend(shift_interline, repeat([' '], n_spaces))
   call extend(shift_interline, repeat([edge_ch, ' '], ncols - idx - 1))
 
-  " draw edges from the current node to its parents.
+  " draw edges from the current node to its parent.
   call s:draw_edges(edges, nodeline, shift_interline)
 
   " lines is the list of all graph lines to print.
@@ -121,7 +121,7 @@ function! undoing#graph#ascii#render(buf, state, type, char, text, coldata)
   let a:state[1] = idx
 endfunction
 
-function! s:asciiedges(seen, rev, parents)
+function! s:asciiedges(seen, rev, parent)
   " Adds edge info to undotree DAG walk suitable for
   " undoing#graph#ascii#render()
 
@@ -134,13 +134,11 @@ function! s:asciiedges(seen, rev, parents)
   let knownparents = []
   let newparents = []
 
-  for parent in a:parents
-    if index(a:seen, parent) > -1
-      call add(knownparents, parent)
-    else
-      call add(newparents, parent)
-    endif
-  endfor
+  if index(a:seen, a:parent) > -1
+    call add(knownparents, a:parent)
+  else
+    call add(newparents, a:parent)
+  endif
 
   let ncols = len(a:seen)
 
