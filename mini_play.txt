@@ -12,6 +12,7 @@ Comparison of mini graph vs original ascii graph.
  +--o |  [ 3]   3h
  o----+  [ 2]   3h
  o       [ 1]   3h
+ o       [ 0]   3h
 
  @            [12]
  |     o      [11]
@@ -25,6 +26,7 @@ Comparison of mini graph vs original ascii graph.
  +-----o   |  [ 3]
  o---------+  [ 2]
  o            [ 1]
+ o            [ 0]
 
  @            [12]
  |     o      [11]
@@ -43,6 +45,7 @@ Comparison of mini graph vs original ascii graph.
  |/
  o            [ 2]
  o            [ 1]
+ o            [ 0]
 
  @            [12]
  |
@@ -67,6 +70,8 @@ Comparison of mini graph vs original ascii graph.
  o---------+  [ 2]
  |
  o            [ 1]
+ |
+ o            [ 0]
 
  @           [12] 12 minutes ago
  |

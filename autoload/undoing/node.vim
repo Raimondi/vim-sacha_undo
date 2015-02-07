@@ -5,13 +5,23 @@ function! undoing#node#new(n, parent, time, curhead, newhead) "{{{1
   let node.time     = a:time
   let node.curhead  = a:curhead
   let node.newhead  = a:newhead
+  let node.children = []
+  if has_key(a:parent, 'children')
+    call add(a:parent.children, node)
+  endif
 
-  func node.to_s() dict
+  func node.to_s(...) dict
+    if a:0 && a:1
+      return       'n='         .  self.n
+            \ .  ', p='    .  self.parent.n
+            \ .  ', c='  .  string(map(copy(self.children), 'v:val.n'))
+    endif
     return       'n='         .  self.n
           \ .  ', time='      .  self.time
           \ .  ', curhead='   .  self.curhead
           \ .  ', newhead='   .  self.newhead
           \ .  ', parent='    .  self.parent.n
+          \ .  ', children='  .  string(map(copy(self.children), 'v:val.n'))
   endfunction
 
   return node
