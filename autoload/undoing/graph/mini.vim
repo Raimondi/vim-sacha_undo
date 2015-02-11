@@ -1,7 +1,8 @@
 function! undoing#graph#mini#render(...) "{{{
   let node = call('undoing#tree#new', a:000).root
+  let current = min(map(copy(node.children), 'v:val.n')) - 1
   let lines = {
-        \ 'current': 0,
+        \ 'current': current,
         \ 'content': []
         \}
   function lines.to_s(...) "{{{
@@ -21,9 +22,10 @@ function! undoing#graph#mini#render(...) "{{{
   call line.add_current(s:item('o', node))
   let lines.current += 1
   while line.active
-    echo 'render: while: '
+    "echo 'render: while: '
     call insert(lines.content, line)
-    echo lines.to_s(1)
+    "echo lines.to_s(1)
+    "echo line.to_s(2)
     let line = line.next_line()
   endwhile
   echo lines.to_s(0)
@@ -98,24 +100,19 @@ function! s:line(lines) "{{{
     else
       return printf('{n=%s, c=%s, a=%s, x: [%s]', self.n, self.lines.current, self.active, join(map(copy(self.items), 'v:val.to_s(2)'), ', '))
     endif
-    return '{'
-          \. 'n: ' . self.n . ', '
-          \. 'c: ' . self.lines.current . ', '
-          \. 'a: ' . self.active . ', '
-            \. 'x: ' . get(get(self, 'next', {}), 'n', -1) . ', '
-          \. ' [' . join(map(copy(self.items), 'v:val.to_s()'), ', ') . ']'
-          \. '}'
   endfunction "}}}
   function l.add_padding() "{{{
     let line = self
     while !empty(line.prev)
       let line = line.prev
-      let left = line.items[self.index]
       if self.index + 1 == len(line.items)
-        let type = left.type =~ '[-]' ? '-' : ' '
-        call add(line.items, left.new_empty(type))
+        break
+      endif
+      let left = line.item(self.index)
+      let right = line.item(self.index + 1)
+      if right.type == ' ' || ( right.type ==# 'o' && empty(right.node.children) )
+        break
       else
-        let right = line.items[self.index + 1]
         let pair = left.type . right.type
         if pair =~# 'o[-+]' || pair =~# '+[-o]' || pair =~# '-[-+o]'
           let type = '-'
