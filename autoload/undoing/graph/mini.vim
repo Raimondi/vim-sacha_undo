@@ -19,7 +19,9 @@ function! undoing#graph#mini#render(...) "{{{
   endfunction "}}}
 
   let line = s:line(lines)
-  call line.add_current(s:item('o', node))
+  let item = s:item('o', node)
+  let item.line = line
+  call line.add_current(item)
   let lines.current += 1
   while line.active
     "echo 'render: while: '
