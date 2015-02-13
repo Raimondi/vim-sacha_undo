@@ -27,7 +27,7 @@ function! undoing#graph#mini#render(...) "{{{
     "echo 'render: while: '
     call insert(lines.content, line)
     "echo lines.to_s(1)
-    "echo line.to_s(2)
+    "echo 'render: while: ' . line.to_s(2)
     let line = line.next_line()
   endwhile
   echo lines.to_s(0)
@@ -81,7 +81,6 @@ function! s:line(lines) "{{{
   function l.add_current(item) "{{{
     if a:item.children_cnt > 1
       let child = a:item.next_child()
-      let a:item.index -= 1
       call self.add(a:item)
       call self.add(child)
       call self.add_padding()
@@ -112,7 +111,7 @@ function! s:line(lines) "{{{
       endif
       let left = line.item(self.index)
       let right = line.item(self.index + 1)
-      if right.type == ' ' || ( right.type ==# 'o' && empty(right.node.children) )
+      if right.type == ' ' || ( right.type ==# 'o' && empty(right.children) )
         break
       else
         let pair = left.type . right.type
@@ -134,16 +133,22 @@ function! s:item(...) "{{{
   let d = {}
   function d.init(...) "{{{
     let self.type = a:0 ? a:1 : ' '
-    let self.node = a:0 > 1 ? a:2 : {}
-    let self.children_cnt = len(get(self.node, 'children', []))
-    let self.n = get(self.node, 'n', -1)
+    let node = a:0 > 1 ? copy(a:2) : {}
+    let self.n = -1
     let text = ''
-    let self.index = a:0 > 2 ? a:3 : len(get(self.node, 'children', [])) - 1
+    if has_key(node, 'to_s')
+      call remove(node, 'to_s')
+    endif
+    call extend(self, node)
+    let self.index = a:0 > 2 ? a:3 : len(get(self, 'children', [])) - 1
+    let self.children_cnt = len(get(self, 'children', []))
     return self
   endfunction "}}}
+  call call(d.init, a:000, d)
   function d.new_empty(...) "{{{
     let e = copy(self)
     let type = a:0 ? a:1 : ' '
+    let children = []
     return e.init(type, {}, -1)
   endfunction "}}}
   function d.to_s(...) "{{{
@@ -154,10 +159,13 @@ function! s:item(...) "{{{
       return printf('[%s %2s]', self.type, self.n)
     endif
     return '{'
+          \ . 'n: ' . self.n . ', '
           \ . 't: ' . self.type . ', '
           \ . 'l: ' . self.line.n . ', '
           \ . 'i: ' . self.index . ', '
-          \ . 'node: {'  . ( empty(self.node) ? '' : self.node.to_s(1) ) . '}'
+          \ . 'c: ['
+          \ .   join(map(copy(self.children), 'v:val.to_s(1)'), ', ')
+          \ . ']'
           \ . '}'
   endfunction "}}}
   function d.is_current() "{{{
@@ -173,7 +181,17 @@ function! s:item(...) "{{{
   endfunction "}}}
   function d.next_child(...) "{{{
     let type = a:0 ? a:1 : '+'
-    let child = copy(self).init(type, self.node.children[self.index])
+    let i = 0
+    let len = len(self.children)
+    while i < len
+      if self.children[i].n == self.line.lines.current
+        break
+      endif
+      let i += 1
+    endwhile
+    let index = i >= len ? -1 : i
+    let node = remove(self.children, index)
+    let child = copy(self).init(type, node)
     if !a:0 && child.is_current()
       let child.type = 'o'
     endif
@@ -185,21 +203,22 @@ function! s:item(...) "{{{
     elseif self.is_current()
       return [1, self.clone('o')]
     elseif self.is_parent()
-      let child = self.next_child('o')
-      if child.is_current()
-        if self.index == 0
-          return [1, child]
+      "let child = self.next_child('o')
+      "if child.is_current()
+      if min(map(copy(self.children), 'v:val.n')) == self.line.lines.current
+        if len(self.children) == 1
+          return [1, self.next_child('o')]
         else
           return [1, self.clone('+')]
         endif
       else
         return [0, self.clone('|')]
       endif
-    elseif self.type == 'o' && self.index == -1
+    elseif self.type == 'o' && empty(self.children)
       return [0, self.new_empty()]
     else
       return [0, self.clone('|')]
     endif
   endfunction "}}}
-  return call(d.init, a:000, d)
+  return d
 endfunction "}}}
