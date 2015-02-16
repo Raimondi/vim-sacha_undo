@@ -28,7 +28,7 @@ function! undoing#graph#mini#render(...) "{{{
     call insert(lines.content, line)
     "echo lines.to_s(1)
     "echo 'render: while: ' . line.to_s(2)
-    let line = line.next_line()
+    let line = line.get_next_line()
   endwhile
   echo lines.to_s(0)
   return lines
@@ -48,21 +48,19 @@ function! s:line(lines) "{{{
     let self.text = ''
     return self
   endfunction "}}}
-  function l.next_line() "{{{
+  function l.get_next_line() "{{{
     let c = copy(self)
     let c.prev = self
     let c.n += 1
     let self.next = c
     call c.init()
-    call c.add_items()
+    call c.populate()
     return c
   endfunction "}}}
-  function l.get_next_item(index) "{{{
-    return self.item(a:index).next_item()
-  endfunction "}}}
-  function l.add_items() "{{{
+  function l.populate() "{{{
     while self.index < len(self.prev.items)
-      let [current, item] = self.prev.get_next_item(self.index)
+      let item = self.prev.item(self.index)
+      let [current, item] = item.spawn()
       if current
         call self.add_current(item)
         let inc_current = 1
@@ -92,16 +90,6 @@ function! s:line(lines) "{{{
   function l.item(index) "{{{
     return self.items[a:index]
   endfunction "}}}
-  function l.to_s(...) "{{{
-    let verbose = a:0 ? a:1 : 0
-    if verbose == 0
-      return ' ' . join(map(copy(self.items), 'v:val.to_s(0)'), '') . self.text
-    elseif verbose == 1
-      return join(map(copy(self.items), 'v:val.to_s(1)'), ' ')
-    else
-      return printf('{n=%s, c=%s, a=%s, x: [%s]', self.n, self.lines.current, self.active, join(map(copy(self.items), 'v:val.to_s(2)'), ', '))
-    endif
-  endfunction "}}}
   function l.add_padding() "{{{
     let line = self
     while !empty(line.prev)
@@ -125,18 +113,29 @@ function! s:line(lines) "{{{
     endwhile
     let self.index += 1
   endfunction "}}}
+  function l.to_s(...) "{{{
+    let verbose = a:0 ? a:1 : 0
+    if verbose == 0
+      return ' ' . join(map(copy(self.items), 'v:val.to_s(0)'), '') . self.text
+    elseif verbose == 1
+      return join(map(copy(self.items), 'v:val.to_s(1)'), ' ')
+    else
+      return printf('{n=%s, c=%s, a=%s, x: [%s]', self.n, self.lines.current, self.active, join(map(copy(self.items), 'v:val.to_s(2)'), ', '))
+    endif
+  endfunction "}}}
   call l.init()
   return l
 endfunction "}}}
 
 function! s:item(...) "{{{
-  let d = {}
-  function d.init(...) "{{{
+  let i = {}
+  function i.init(...) "{{{
     let self.type = a:0 ? a:1 : ' '
     let node = a:0 > 1 ? copy(a:2) : {}
     let self.n = -1
     let text = ''
     if has_key(node, 'to_s')
+      " item has its own to_s()
       call remove(node, 'to_s')
     endif
     call extend(self, node)
@@ -144,42 +143,25 @@ function! s:item(...) "{{{
     let self.children_cnt = len(get(self, 'children', []))
     return self
   endfunction "}}}
-  call call(d.init, a:000, d)
-  function d.new_empty(...) "{{{
+  call call(i.init, a:000, i)
+  function i.new_empty(...) "{{{
     let e = copy(self)
     let type = a:0 ? a:1 : ' '
     let children = []
     return e.init(type, {}, -1)
   endfunction "}}}
-  function d.to_s(...) "{{{
-    let verbose = a:0 ? a:1 : 0
-    if verbose == 0
-      return self.type
-    elseif verbose == 1
-      return printf('[%s %2s]', self.type, self.n)
-    endif
-    return '{'
-          \ . 'n: ' . self.n . ', '
-          \ . 't: ' . self.type . ', '
-          \ . 'l: ' . self.line.n . ', '
-          \ . 'i: ' . self.index . ', '
-          \ . 'c: ['
-          \ .   join(map(copy(self.children), 'v:val.to_s(1)'), ', ')
-          \ . ']'
-          \ . '}'
-  endfunction "}}}
-  function d.is_current() "{{{
+  function i.is_current() "{{{
     return  self.n == self.line.lines.current
   endfunction "}}}
-  function d.is_parent() "{{{
+  function i.is_parent() "{{{
     return self.n < self.line.lines.current && self.children_cnt > 0
   endfunction "}}}
-  function d.clone(...) "{{{
+  function i.clone(...) "{{{
     let c = copy(self)
     let c.type = a:0 ? a:1 : self.type
     return c
   endfunction "}}}
-  function d.next_child(...) "{{{
+  function i.next_child(...) "{{{
     let type = a:0 ? a:1 : '+'
     let i = 0
     let len = len(self.children)
@@ -197,7 +179,7 @@ function! s:item(...) "{{{
     endif
     return child
   endfunction "}}}
-  function d.next_item() "{{{
+  function i.spawn() "{{{
     if self.n == -1
       return [0, self.new_empty()]
     elseif self.is_current()
@@ -220,5 +202,22 @@ function! s:item(...) "{{{
       return [0, self.clone('|')]
     endif
   endfunction "}}}
-  return d
+  function i.to_s(...) "{{{
+    let verbose = a:0 ? a:1 : 0
+    if verbose == 0
+      return self.type
+    elseif verbose == 1
+      return printf('[%s %2s]', self.type, self.n)
+    endif
+    return '{'
+          \ . 'n: ' . self.n . ', '
+          \ . 't: ' . self.type . ', '
+          \ . 'l: ' . self.line.n . ', '
+          \ . 'i: ' . self.index . ', '
+          \ . 'c: ['
+          \ .   join(map(copy(self.children), 'v:val.to_s(1)'), ', ')
+          \ . ']'
+          \ . '}'
+  endfunction "}}}
+  return i
 endfunction "}}}
