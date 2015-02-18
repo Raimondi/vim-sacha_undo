@@ -68,3 +68,7 @@ function! s:age(ts)
     endif
   endfor
 endfunction
+
+function! undoing#graph#age(...)
+  return call('s:age', a:000)
+endfunction
